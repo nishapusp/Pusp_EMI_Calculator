@@ -1,9 +1,8 @@
 import streamlit as st
 
 # Function to calculate EMI
-def calculate_emi(principal, annual_rate, tenure_years):
+def calculate_emi(principal, annual_rate, tenure_months):
     monthly_rate = annual_rate / (12 * 100)
-    tenure_months = tenure_years * 12
     if monthly_rate == 0:
         emi = principal / tenure_months
     else:
@@ -59,11 +58,9 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
     if loan_type == "Home Loan":
         base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, 10.25)
         
-        # New condition for female concession
         if gender == "Female" and (base_roi <= 8.35 or rounded_credit_score > 750):
             base_roi = roi_data[loan_type][customer_category["type"]]["Male"].get(rounded_credit_score, 10.25)
         
-        # Updated house count condition
         if house_count == 3:
             base_roi += 0.25
         elif house_count >= 4:
@@ -71,12 +68,12 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
         
         if ltv_ratio > 0.8:
             base_roi += 0.5
+        
+        # Credit Life Insurance concession (only for Home Loans)
+        if credit_life_insurance:
+            base_roi -= 0.05
     elif loan_type == "Vehicle Loan":
         base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender][vehicle_type].get(rounded_credit_score, 10.25)
-
-    # Credit Life Insurance concession
-    if credit_life_insurance:
-        base_roi -= 0.05
 
     return base_roi
 
@@ -97,11 +94,32 @@ loan_amount = st.number_input("Loan Amount (in Lakhs)", min_value=0.01, step=0.0
 # Convert loan amount from lakhs to rupees for internal calculations
 loan_amount_rupees = loan_amount * 100000
 
-# Adjust tenure based on loan type
+# Loan tenure input
+st.subheader("Loan Tenure")
+col1, col2 = st.columns(2)
+
 if loan_type == "Home Loan":
-    tenure_years = st.number_input("Loan Tenure (Years)", min_value=1, max_value=30, step=1, value=5)
+    max_years = 30
+    default_years = 5
+    with col1:
+        tenure_years = st.number_input("Years", min_value=0, max_value=max_years, value=default_years, step=1)
+    with col2:
+        tenure_months = st.number_input("Months", min_value=0, max_value=11, value=0, step=1)
 else:  # Vehicle Loan
-    tenure_years = st.number_input("Loan Tenure (Years)", min_value=1, max_value=7, step=1, value=5)
+    max_years = 7
+    default_years = 5
+    with col1:
+        tenure_years = st.number_input("Years", min_value=0, max_value=max_years, value=default_years, step=1)
+    with col2:
+        max_months = min(11, 84 - tenure_years * 12)
+        tenure_months = st.number_input("Months", min_value=0, max_value=max_months, value=0, step=1)
+
+total_tenure_months = tenure_years * 12 + tenure_months
+
+# Validate total tenure for Vehicle Loan
+if loan_type == "Vehicle Loan" and total_tenure_months > 84:
+    st.error("Total tenure for Vehicle Loan cannot exceed 84 months.")
+    st.stop()
 
 credit_score = st.number_input("Credit Score", min_value=300, max_value=900, step=1, value=750)
 customer_type = st.selectbox("Customer Category", ["Salaried", "Non-Salaried"])
@@ -118,11 +136,10 @@ if loan_type == "Home Loan":
     house_value = st.number_input("Value of the House (in Lakhs)", min_value=0.01, step=0.01, value=20.00, format="%.2f")
     if house_value > 0:
         ltv_ratio = loan_amount / house_value
+    credit_life_insurance = st.checkbox("Credit Life Insurance Proposed")
 elif loan_type == "Vehicle Loan":
     vehicle_type = st.selectbox("Vehicle Type", ["Standard", "Electric"])
-
-# Credit Life Insurance option
-credit_life_insurance = st.checkbox("Credit Life Insurance Proposed")
+    credit_life_insurance = False
 
 # Combine category information
 customer_category = {"type": customer_type, "employment": employment_type, "gender": gender}
@@ -134,10 +151,17 @@ roi = determine_roi(loan_type, credit_score, customer_category, ltv_ratio, house
 if roi == "Not Eligible":
     st.error("You are not eligible for this loan due to a low credit score.")
 else:
-    emi = calculate_emi(loan_amount_rupees, roi, tenure_years)
+    emi = calculate_emi(loan_amount_rupees, roi, total_tenure_months)
     st.success(f"Applicable ROI: {roi:.2f}%")
     st.success(f"EMI: ₹{emi:.2f}")
 
 # Display the rounded credit score used for calculation
 st.info(f"Credit Score used for calculation: {round_down_credit_score(credit_score)}")
 st.info(f"Loan to Value Ratio considered: {ltv_ratio:.2f}")
+
+# Display total tenure
+st.info(f"Total Loan Tenure: {tenure_years} years and {tenure_months} months ({total_tenure_months} months)")
+
+# Display credit life insurance concession note (only for Home Loans)
+if loan_type == "Home Loan" and credit_life_insurance:
+    st.info("Note: A 0.05% concession has been applied to the ROI due to Credit Life Insurance.")
