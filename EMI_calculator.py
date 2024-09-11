@@ -84,6 +84,7 @@ st.set_page_config(page_title="EMI and ROI Calculator", page_icon="🏦", layout
 st.sidebar.text("Created by:")
 st.sidebar.text("Pushpender Sharma")
 st.sidebar.text("CM UMFB Panchkula")
+st.sidebar.text("M : +919920802159")
 
 st.title("🏦 EMI and ROI Calculator")
 
@@ -100,11 +101,13 @@ col1, col2 = st.columns(2)
 
 if loan_type == "Home Loan":
     max_years = 30
-    default_years = 5
+    default_years = 10
     with col1:
         tenure_years = st.number_input("Years", min_value=0, max_value=max_years, value=default_years, step=1)
     with col2:
-        tenure_months = st.number_input("Months", min_value=0, max_value=11, value=0, step=1)
+        max_months = min(11, 360 - tenure_years * 12)
+        tenure_months = st.number_input("Months", min_value=0, max_value=max_months, value=0, step=1)
+
 else:  # Vehicle Loan
     max_years = 7
     default_years = 5
@@ -165,3 +168,11 @@ st.info(f"Total Loan Tenure: {tenure_years} years and {tenure_months} months ({t
 # Display credit life insurance concession note (only for Home Loans)
 if loan_type == "Home Loan" and credit_life_insurance:
     st.info("Note: A 0.05% concession has been applied to the ROI due to Credit Life Insurance.")
+
+
+
+
+
+
+
+st.markdown("For feedback, Please reach through whats app to Pushpender Sharma on +91 9920802159")
