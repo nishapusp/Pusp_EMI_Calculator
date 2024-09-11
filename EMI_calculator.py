@@ -15,7 +15,7 @@ def round_down_credit_score(score):
     return (score // 50) * 50
 
 # Function to determine ROI based on loan type, credit score, category, and other factors
-def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house_count=1, vehicle_type="Standard"):
+def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house_count=1, vehicle_type="Standard", credit_life_insurance=False):
     roi_data = {
         "Home Loan": {
             "Salaried": {
@@ -58,12 +58,25 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
 
     if loan_type == "Home Loan":
         base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, 10.25)
-        if house_count >= 3:
-            base_roi += 1.5
+        
+        # New condition for female concession
+        if gender == "Female" and (base_roi <= 8.35 or rounded_credit_score > 750):
+            base_roi = roi_data[loan_type][customer_category["type"]]["Male"].get(rounded_credit_score, 10.25)
+        
+        # Updated house count condition
+        if house_count == 3:
+            base_roi += 0.25
+        elif house_count >= 4:
+            base_roi += 0.75
+        
         if ltv_ratio > 0.8:
             base_roi += 0.5
     elif loan_type == "Vehicle Loan":
         base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender][vehicle_type].get(rounded_credit_score, 10.25)
+
+    # Credit Life Insurance concession
+    if credit_life_insurance:
+        base_roi -= 0.05
 
     return base_roi
 
@@ -79,7 +92,10 @@ st.title("🏦 EMI and ROI Calculator")
 
 # User inputs
 loan_type = st.selectbox("Select Loan Type", ["Home Loan", "Vehicle Loan"])
-loan_amount = st.number_input("Loan Amount (in Rupees)", min_value=1000, step=1000, value=100000)
+loan_amount = st.number_input("Loan Amount (in Lakhs)", min_value=0.01, step=0.01, value=10.00, format="%.2f")
+
+# Convert loan amount from lakhs to rupees for internal calculations
+loan_amount_rupees = loan_amount * 100000
 
 # Adjust tenure based on loan type
 if loan_type == "Home Loan":
@@ -99,25 +115,29 @@ vehicle_type = "Standard"
 
 if loan_type == "Home Loan":
     house_count = st.number_input("Number of Houses Owned (including this one)", min_value=1, step=1, value=1)
-    house_value = st.number_input("Value of the House (in Rupees)", min_value=10000, step=10000, value=200000)
+    house_value = st.number_input("Value of the House (in Lakhs)", min_value=0.01, step=0.01, value=20.00, format="%.2f")
     if house_value > 0:
         ltv_ratio = loan_amount / house_value
 elif loan_type == "Vehicle Loan":
     vehicle_type = st.selectbox("Vehicle Type", ["Standard", "Electric"])
 
+# Credit Life Insurance option
+credit_life_insurance = st.checkbox("Credit Life Insurance Proposed")
+
 # Combine category information
 customer_category = {"type": customer_type, "employment": employment_type, "gender": gender}
 
 # Calculate ROI and EMI
-roi = determine_roi(loan_type, credit_score, customer_category, ltv_ratio, house_count, vehicle_type)
+roi = determine_roi(loan_type, credit_score, customer_category, ltv_ratio, house_count, vehicle_type, credit_life_insurance)
 
 # Display results
 if roi == "Not Eligible":
     st.error("You are not eligible for this loan due to a low credit score.")
 else:
-    emi = calculate_emi(loan_amount, roi, tenure_years)
+    emi = calculate_emi(loan_amount_rupees, roi, tenure_years)
     st.success(f"Applicable ROI: {roi:.2f}%")
     st.success(f"EMI: ₹{emi:.2f}")
 
 # Display the rounded credit score used for calculation
 st.info(f"Credit Score used for calculation: {round_down_credit_score(credit_score)}")
+st.info(f"Loan to Value Ratio considered: {ltv_ratio:.2f}")
