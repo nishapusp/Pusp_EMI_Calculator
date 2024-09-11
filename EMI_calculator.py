@@ -10,6 +10,10 @@ def calculate_emi(principal, annual_rate, tenure_years):
         emi = (principal * monthly_rate * (1 + monthly_rate) ** tenure_months) / ((1 + monthly_rate) ** tenure_months - 1)
     return emi
 
+# Function to round down credit score to nearest 50
+def round_down_credit_score(score):
+    return (score // 50) * 50
+
 # Function to determine ROI based on loan type, credit score, category, and other factors
 def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house_count=1, vehicle_type="Standard"):
     roi_data = {
@@ -44,25 +48,32 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
 
     min_credit_scores = {"Home Loan": 600, "Vehicle Loan": 600}
 
-    if credit_score < min_credit_scores.get(loan_type, 600):
+    rounded_credit_score = round_down_credit_score(credit_score)
+    
+    if rounded_credit_score < min_credit_scores.get(loan_type, 600):
         return "Not Eligible"
 
     employment = customer_category["employment"]
     gender = customer_category["gender"]
 
     if loan_type == "Home Loan":
-        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(credit_score, 10.25)
+        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, 10.25)
         if house_count >= 3:
             base_roi += 1.5
         if ltv_ratio > 0.8:
             base_roi += 0.5
     elif loan_type == "Vehicle Loan":
-        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender][vehicle_type].get(credit_score, 10.25)
+        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender][vehicle_type].get(rounded_credit_score, 10.25)
 
     return base_roi
 
 # Streamlit UI
 st.set_page_config(page_title="EMI and ROI Calculator", page_icon="🏦", layout="centered")
+
+# Add creator information
+st.sidebar.text("Created by:")
+st.sidebar.text("Pushpender Sharma")
+st.sidebar.text("CM UMFB Panchkula")
 
 st.title("🏦 EMI and ROI Calculator")
 
@@ -76,7 +87,7 @@ if loan_type == "Home Loan":
 else:  # Vehicle Loan
     tenure_years = st.number_input("Loan Tenure (Years)", min_value=1, max_value=7, step=1, value=5)
 
-credit_score = st.number_input("Credit Score", min_value=300, max_value=900, step=50, value=750)
+credit_score = st.number_input("Credit Score", min_value=300, max_value=900, step=1, value=750)
 customer_type = st.selectbox("Customer Category", ["Salaried", "Non-Salaried"])
 employment_type = st.selectbox("Employment Type", ["General", "PSU/Govt"])
 gender = st.selectbox("Gender", ["Male", "Female"])
@@ -107,3 +118,6 @@ else:
     emi = calculate_emi(loan_amount, roi, tenure_years)
     st.success(f"Applicable ROI: {roi:.2f}%")
     st.success(f"EMI: ₹{emi:.2f}")
+
+# Display the rounded credit score used for calculation
+st.info(f"Credit Score used for calculation: {round_down_credit_score(credit_score)}")
