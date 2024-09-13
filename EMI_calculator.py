@@ -78,7 +78,7 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
     return base_roi
 
 # Streamlit UI
-st.set_page_config(page_title="EMI and ROI Calculator", page_icon="🏦", layout="centered")
+st.set_page_config(page_title="UBI EMI and ROI Calculator", page_icon="🏦", layout="centered")
 
 # Add creator information
 st.sidebar.text("Created by:")
@@ -86,7 +86,7 @@ st.sidebar.text("Pushpender Sharma")
 st.sidebar.text("CM UMFB Panchkula")
 st.sidebar.text("M : +919920802159")
 
-st.title("🏦 EMI and ROI Calculator")
+st.title("🏦 UBI EMI and ROI Calculator")
 
 # User inputs
 loan_type = st.selectbox("Select Loan Type", ["Home Loan", "Vehicle Loan"])
