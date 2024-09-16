@@ -20,51 +20,61 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
     roi_data = {
         "Home Loan": {
             "Salaried": {
-                "Male": {800: 8.35, 750: 8.50, 700: 9.15, 650: 9.45, 600: 10.25},
-                "Female": {800: 8.35, 750: 8.50, 700: 9.10, 650: 9.40, 600: 10.20},
-                "PSU/Govt": {800: 8.35, 750: 8.50, 700: 9.05, 650: 9.35, 600: 10.15}
+                "Male": {800: EBLR-0.90, 750: EBLR-0.75, 700: EBLR-0.10, 650: EBLR+0.20, 600: EBLR+1.00},
+                "Female": {800: EBLR-0.90, 750: EBLR-0.75, 700: EBLR-0.15, 650: EBLR+0.15, 600: EBLR+0.95},
+                "PSU/Govt": {800: EBLR-0.90, 750: EBLR-0.90, 700: EBLR-0.20, 650: EBLR+0.10, 600: EBLR+0.90}
             },
             "Non-Salaried": {
-                "Male": {800: 8.35, 750: 8.50, 700: 9.25, 650: 9.50, 600: 10.75},
-                "Female": {800: 8.35, 750: 8.50, 700: 9.20, 650: 9.45, 600: 10.70}
+                "Male": {800: EBLR-0.90, 750: EBLR-0.75, 700: EBLR, 650: EBLR+0.25, 600: EBLR+1.50},
+                "Female": {800: EBLR-0.90, 750: EBLR-0.75, 700: EBLR-0.05, 650: EBLR+0.20, 600: EBLR+1.45}
             },
         },
         "Vehicle Loan": {
             "Salaried": {
-                "Male": {"Standard": {800: 8.80, 750: 9.00, 700: 9.45, 650: 10.25, 600: 10.70},
-                         "Electric": {800: 7.80, 750: 8.00, 700: 8.45, 650: 9.25, 600: 9.70}},
-                "Female": {"Standard": {800: 8.75, 750: 8.95, 700: 9.40, 650: 10.20, 600: 10.65},
-                           "Electric": {800: 7.75, 750: 7.95, 700: 8.40, 650: 9.20, 600: 9.65}},
-                "PSU/Govt": {"Standard": {800: 8.70, 750: 8.90, 700: 9.35, 650: 10.15, 600: 10.60},
-                             "Electric": {800: 7.70, 750: 7.90, 700: 8.35, 650: 9.15, 600: 9.60}}
+                "Male": {
+                    "Standard": {800: EBLR-0.45, 750: EBLR-0.25, 700: EBLR+0.20, 650: EBLR+1.00, 600: EBLR+1.45},
+                    "Electric": {800: EBLR-1.45, 750: EBLR-1.25, 700: EBLR-0.80, 650: EBLR, 600: EBLR+0.45}
+                },
+                "Female": {
+                    "Standard": {800: EBLR-0.50, 750: EBLR-0.30, 700: EBLR+0.15, 650: EBLR+0.95, 600: EBLR+1.40},
+                    "Electric": {800: EBLR-1.50, 750: EBLR-1.30, 700: EBLR-0.85, 650: EBLR-0.05, 600: EBLR+0.40}
+                },
+                "PSU/Govt": {
+                    "Standard": {800: EBLR-0.55, 750: EBLR-0.35, 700: EBLR+0.10, 650: EBLR+0.90, 600: EBLR+1.35},
+                    "Electric": {800: EBLR-1.55, 750: EBLR-1.35, 700: EBLR-0.90, 650: EBLR-0.10, 600: EBLR+0.35}
+                }
             },
             "Non-Salaried": {
-                "Male": {"Standard": {800: 8.85, 750: 9.05, 700: 9.50, 650: 10.30, 600: 10.75},
-                         "Electric": {800: 7.85, 750: 8.05, 700: 8.50, 650: 9.30, 600: 9.75}},
-                "Female": {"Standard": {800: 8.80, 750: 9.00, 700: 9.45, 650: 10.25, 600: 10.70},
-                           "Electric": {800: 7.80, 750: 8.00, 700: 8.45, 650: 9.25, 600: 9.70}}
+                "Male": {
+                    "Standard": {800: EBLR-0.40, 750: EBLR-0.20, 700: EBLR+0.25, 650: EBLR+1.05, 600: EBLR+1.50},
+                    "Electric": {800: EBLR-1.40, 750: EBLR-1.20, 700: EBLR-0.75, 650: EBLR+0.05, 600: EBLR+0.50}
+                },
+                "Female": {
+                    "Standard": {800: EBLR-0.45, 750: EBLR-0.25, 700: EBLR+0.20, 650: EBLR+1.00, 600: EBLR+1.45},
+                    "Electric": {800: EBLR-1.45, 750: EBLR-1.25, 700: EBLR-0.80, 650: EBLR, 600: EBLR+0.45}
+                }
             },
         },
         "CRE-RH 3rd House": {
-            "PSU/Govt": {750: EBLR - 0.65},
+            "PSU/Govt": {750: EBLR-0.65},
             "Salaried": {
-                "Male": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.15, 650: EBLR + 0.45, 600: EBLR + 1.25},
-                "Female": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.10, 650: EBLR + 0.40, 600: EBLR + 1.25}
+                "Male": {800: EBLR-0.65, 750: EBLR-0.50, 700: EBLR+0.15, 650: EBLR+0.45, 600: EBLR+1.25},
+                "Female": {800: EBLR-0.65, 750: EBLR-0.50, 700: EBLR+0.10, 650: EBLR+0.40, 600: EBLR+1.25}
             },
             "Non-Salaried": {
-                "Male": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.25, 650: EBLR + 0.50, 600: EBLR + 1.25},
-                "Female": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.20, 650: EBLR + 0.45, 600: EBLR + 1.25}
+                "Male": {800: EBLR-0.65, 750: EBLR-0.50, 700: EBLR+0.25, 650: EBLR+0.50, 600: EBLR+1.25},
+                "Female": {800: EBLR-0.65, 750: EBLR-0.50, 700: EBLR+0.20, 650: EBLR+0.45, 600: EBLR+1.25}
             }
         },
         "CRE-RH 4th House onwards": {
-            "PSU/Govt": {750: EBLR - 0.15},
+            "PSU/Govt": {750: EBLR-0.15},
             "Salaried": {
-                "Male": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.65, 650: EBLR + 0.95, 600: EBLR + 1.75},
-                "Female": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.60, 650: EBLR + 0.90, 600: EBLR + 1.75}
+                "Male": {800: EBLR-0.15, 750: EBLR, 700: EBLR+0.65, 650: EBLR+0.95, 600: EBLR+1.75},
+                "Female": {800: EBLR-0.15, 750: EBLR, 700: EBLR+0.60, 650: EBLR+0.90, 600: EBLR+1.75}
             },
             "Non-Salaried": {
-                "Male": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.75, 650: EBLR + 1.00, 600: EBLR + 1.75},
-                "Female": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.70, 650: EBLR + 0.95, 600: EBLR + 1.75}
+                "Male": {800: EBLR-0.15, 750: EBLR, 700: EBLR+0.75, 650: EBLR+1.00, 600: EBLR+1.75},
+                "Female": {800: EBLR-0.15, 750: EBLR, 700: EBLR+0.70, 650: EBLR+0.95, 600: EBLR+1.75}
             }
         }
     }
@@ -86,15 +96,12 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
             loan_type = "CRE-RH 4th House onwards"
         
         if loan_type == "Home Loan":
-            base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, 10.25)
-            
-            if gender == "Female" and (base_roi <= 8.35 or rounded_credit_score > 750):
-                base_roi = roi_data[loan_type][customer_category["type"]]["Male"].get(rounded_credit_score, 10.25)
+            base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, EBLR+1.00)
         else:  # CRE-RH 3rd House or CRE-RH 4th House onwards
             if employment == "PSU/Govt" and rounded_credit_score >= 750:
                 base_roi = roi_data[loan_type]["PSU/Govt"][750]
             else:
-                base_roi = roi_data[loan_type][customer_category["type"]][gender].get(rounded_credit_score, EBLR + 2.25)
+                base_roi = roi_data[loan_type][customer_category["type"]][gender].get(rounded_credit_score, EBLR+2.25)
         
         if ltv_ratio > 0.8:
             base_roi += 0.5
@@ -103,7 +110,7 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
         if credit_life_insurance:
             base_roi -= 0.05
     elif loan_type == "Vehicle Loan":
-        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender][vehicle_type].get(rounded_credit_score, 10.25)
+        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender][vehicle_type].get(rounded_credit_score, EBLR+1.50)
 
     return base_roi
 
