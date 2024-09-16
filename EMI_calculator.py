@@ -14,7 +14,7 @@ def round_down_credit_score(score):
     return (score // 50) * 50
 
 # Updated function to determine ROI based on loan type, credit score, category, and other factors
-def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house_count=1, vehicle_type="Standard", credit_life_insurance=False):
+def determine_roi(loan_type, credit_score, customer_category, house_count=1, vehicle_type="Standard", credit_life_insurance=False):
     EBLR = 9.25  # Assuming EBLR (External Benchmark Lending Rate) is 9.25%
     
     roi_data = {
@@ -103,9 +103,6 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
             else:
                 base_roi = roi_data[loan_type][customer_category["type"]][gender].get(rounded_credit_score, EBLR+2.25)
         
-        if ltv_ratio > 0.8:
-            base_roi += 0.5
-        
         # Credit Life Insurance concession (only for Home Loans)
         if credit_life_insurance:
             base_roi -= 0.05
@@ -131,11 +128,6 @@ loan_amount = st.number_input("Loan Amount (in Lakhs)", min_value=0.01, step=0.0
 
 # Convert loan amount from lakhs to rupees for internal calculations
 loan_amount_rupees = loan_amount * 100000
-
-# Move "Value of the House" input here for Home Loans
-house_value = 0
-if loan_type == "Home Loan":
-    house_value = st.number_input("Value of the House (in Lakhs)", min_value=0.01, step=0.01, value=20.00, format="%.2f")
 
 # Loan tenure input
 st.subheader("Loan Tenure")
@@ -173,14 +165,11 @@ gender = st.selectbox("Gender", ["Male", "Female"])
 
 # Loan-specific inputs
 house_count = 1
-ltv_ratio = 0
 vehicle_type = "Standard"
 credit_life_insurance = False
 
 if loan_type == "Home Loan":
     house_count = st.number_input("Number of Houses Owned (including this one)", min_value=1, step=1, value=1)
-    if house_value > 0:
-        ltv_ratio = loan_amount / house_value
     credit_life_insurance = st.checkbox("Credit Life Insurance Proposed")
 elif loan_type == "Vehicle Loan":
     vehicle_type = st.selectbox("Vehicle Type", ["Standard", "Electric"])
@@ -189,7 +178,7 @@ elif loan_type == "Vehicle Loan":
 customer_category = {"type": customer_type, "employment": employment_type, "gender": gender}
 
 # Calculate ROI and EMI
-roi = determine_roi(loan_type, credit_score, customer_category, ltv_ratio, house_count, vehicle_type, credit_life_insurance)
+roi = determine_roi(loan_type, credit_score, customer_category, house_count, vehicle_type, credit_life_insurance)
 
 # Display results
 if roi == "Not Eligible":
@@ -201,7 +190,6 @@ else:
 
 # Display the rounded credit score used for calculation
 st.info(f"Credit Score used for calculation: {round_down_credit_score(credit_score)}")
-st.info(f"Loan to Value Ratio considered: {ltv_ratio:.2f}")
 
 # Display total tenure
 st.info(f"Total Loan Tenure: {tenure_years} years and {tenure_months} months ({total_tenure_months} months)")
