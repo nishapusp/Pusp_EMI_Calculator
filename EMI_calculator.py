@@ -95,6 +95,11 @@ loan_amount = st.number_input("Loan Amount (in Lakhs)", min_value=0.01, step=0.0
 # Convert loan amount from lakhs to rupees for internal calculations
 loan_amount_rupees = loan_amount * 100000
 
+# Move "Value of the House" input here for Home Loans
+house_value = 0
+if loan_type == "Home Loan":
+    house_value = st.number_input("Value of the House (in Lakhs)", min_value=0.01, step=0.01, value=20.00, format="%.2f")
+
 # Loan tenure input
 st.subheader("Loan Tenure")
 col1, col2 = st.columns(2)
@@ -102,20 +107,15 @@ col1, col2 = st.columns(2)
 if loan_type == "Home Loan":
     max_years = 30
     default_years = 10
-    with col1:
-        tenure_years = st.number_input("Years", min_value=0, max_value=max_years, value=default_years, step=1)
-    with col2:
-        max_months = min(11, 360 - tenure_years * 12)
-        tenure_months = st.number_input("Months", min_value=0, max_value=max_months, value=0, step=1)
-
 else:  # Vehicle Loan
     max_years = 7
     default_years = 5
-    with col1:
-        tenure_years = st.number_input("Years", min_value=0, max_value=max_years, value=default_years, step=1)
-    with col2:
-        max_months = min(11, 84 - tenure_years * 12)
-        tenure_months = st.number_input("Months", min_value=0, max_value=max_months, value=0, step=1)
+
+with col1:
+    tenure_years = st.number_input("Years", min_value=0, max_value=max_years, value=default_years, step=1)
+with col2:
+    max_months = min(11, (360 if loan_type == "Home Loan" else 84) - tenure_years * 12)
+    tenure_months = st.number_input("Months", min_value=0, max_value=max_months, value=0, step=1)
 
 total_tenure_months = tenure_years * 12 + tenure_months
 
@@ -126,23 +126,27 @@ if loan_type == "Vehicle Loan" and total_tenure_months > 84:
 
 credit_score = st.number_input("Credit Score", min_value=300, max_value=900, step=1, value=750)
 customer_type = st.selectbox("Customer Category", ["Salaried", "Non-Salaried"])
-employment_type = st.selectbox("Employment Type", ["General", "PSU/Govt"])
+
+# Only show employment type for Salaried customers
+employment_type = "General"
+if customer_type == "Salaried":
+    employment_type = st.selectbox("Employment Type", ["General", "PSU/Govt"])
+
 gender = st.selectbox("Gender", ["Male", "Female"])
 
 # Loan-specific inputs
 house_count = 1
 ltv_ratio = 0
 vehicle_type = "Standard"
+credit_life_insurance = False
 
 if loan_type == "Home Loan":
     house_count = st.number_input("Number of Houses Owned (including this one)", min_value=1, step=1, value=1)
-    house_value = st.number_input("Value of the House (in Lakhs)", min_value=0.01, step=0.01, value=20.00, format="%.2f")
     if house_value > 0:
         ltv_ratio = loan_amount / house_value
     credit_life_insurance = st.checkbox("Credit Life Insurance Proposed")
 elif loan_type == "Vehicle Loan":
     vehicle_type = st.selectbox("Vehicle Type", ["Standard", "Electric"])
-    credit_life_insurance = False
 
 # Combine category information
 customer_category = {"type": customer_type, "employment": employment_type, "gender": gender}
@@ -168,11 +172,5 @@ st.info(f"Total Loan Tenure: {tenure_years} years and {tenure_months} months ({t
 # Display credit life insurance concession note (only for Home Loans)
 if loan_type == "Home Loan" and credit_life_insurance:
     st.info("Note: A 0.05% concession has been applied to the ROI due to Credit Life Insurance.")
-
-
-
-
-
-
 
 st.markdown("For feedback, Please reach through whats app to Pushpender Sharma on +91 9920802159")
