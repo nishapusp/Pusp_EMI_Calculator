@@ -13,8 +13,10 @@ def calculate_emi(principal, annual_rate, tenure_months):
 def round_down_credit_score(score):
     return (score // 50) * 50
 
-# Function to determine ROI based on loan type, credit score, category, and other factors
+# Updated function to determine ROI based on loan type, credit score, category, and other factors
 def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house_count=1, vehicle_type="Standard", credit_life_insurance=False):
+    EBLR = 9.25  # Assuming EBLR (External Benchmark Lending Rate) is 9.25%
+    
     roi_data = {
         "Home Loan": {
             "Salaried": {
@@ -42,10 +44,32 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
                 "Female": {"Standard": {800: 8.80, 750: 9.00, 700: 9.45, 650: 10.25, 600: 10.70},
                            "Electric": {800: 7.80, 750: 8.00, 700: 8.45, 650: 9.25, 600: 9.70}}
             },
+        },
+        "CRE-RH 3rd House": {
+            "PSU/Govt": {750: EBLR - 0.65},
+            "Salaried": {
+                "Male": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.15, 650: EBLR + 0.45, 600: EBLR + 1.25},
+                "Female": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.10, 650: EBLR + 0.40, 600: EBLR + 1.25}
+            },
+            "Non-Salaried": {
+                "Male": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.25, 650: EBLR + 0.50, 600: EBLR + 1.25},
+                "Female": {800: EBLR - 0.65, 750: EBLR - 0.50, 700: EBLR + 0.20, 650: EBLR + 0.45, 600: EBLR + 1.25}
+            }
+        },
+        "CRE-RH 4th House onwards": {
+            "PSU/Govt": {750: EBLR - 0.15},
+            "Salaried": {
+                "Male": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.65, 650: EBLR + 0.95, 600: EBLR + 1.75},
+                "Female": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.60, 650: EBLR + 0.90, 600: EBLR + 1.75}
+            },
+            "Non-Salaried": {
+                "Male": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.75, 650: EBLR + 1.00, 600: EBLR + 1.75},
+                "Female": {800: EBLR - 0.15, 750: EBLR, 700: EBLR + 0.70, 650: EBLR + 0.95, 600: EBLR + 1.75}
+            }
         }
     }
 
-    min_credit_scores = {"Home Loan": 600, "Vehicle Loan": 600}
+    min_credit_scores = {"Home Loan": 600, "Vehicle Loan": 600, "CRE-RH 3rd House": 600, "CRE-RH 4th House onwards": 600}
 
     rounded_credit_score = round_down_credit_score(credit_score)
     
@@ -56,15 +80,21 @@ def determine_roi(loan_type, credit_score, customer_category, ltv_ratio=0, house
     gender = customer_category["gender"]
 
     if loan_type == "Home Loan":
-        base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, 10.25)
-        
-        if gender == "Female" and (base_roi <= 8.35 or rounded_credit_score > 750):
-            base_roi = roi_data[loan_type][customer_category["type"]]["Male"].get(rounded_credit_score, 10.25)
-        
         if house_count == 3:
-            base_roi += 0.25
+            loan_type = "CRE-RH 3rd House"
         elif house_count >= 4:
-            base_roi += 0.75
+            loan_type = "CRE-RH 4th House onwards"
+        
+        if loan_type == "Home Loan":
+            base_roi = roi_data[loan_type][customer_category["type"]][employment if employment == "PSU/Govt" else gender].get(rounded_credit_score, 10.25)
+            
+            if gender == "Female" and (base_roi <= 8.35 or rounded_credit_score > 750):
+                base_roi = roi_data[loan_type][customer_category["type"]]["Male"].get(rounded_credit_score, 10.25)
+        else:  # CRE-RH 3rd House or CRE-RH 4th House onwards
+            if employment == "PSU/Govt" and rounded_credit_score >= 750:
+                base_roi = roi_data[loan_type]["PSU/Govt"][750]
+            else:
+                base_roi = roi_data[loan_type][customer_category["type"]][gender].get(rounded_credit_score, EBLR + 2.25)
         
         if ltv_ratio > 0.8:
             base_roi += 0.5
@@ -172,5 +202,14 @@ st.info(f"Total Loan Tenure: {tenure_years} years and {tenure_months} months ({t
 # Display credit life insurance concession note (only for Home Loans)
 if loan_type == "Home Loan" and credit_life_insurance:
     st.info("Note: A 0.05% concession has been applied to the ROI due to Credit Life Insurance.")
+
+# Display house count information for Home Loans
+if loan_type == "Home Loan":
+    if house_count == 1 or house_count == 2:
+        st.info(f"Regular Home Loan rates applied for house number {house_count}")
+    elif house_count == 3:
+        st.info("CRE-RH 3rd House rates applied")
+    elif house_count >= 4:
+        st.info("CRE-RH 4th House onwards rates applied")
 
 st.markdown("For feedback, Please reach through whats app to Pushpender Sharma on +91 9920802159")
